@@ -52,7 +52,12 @@ def find_bookmarks_dir(explicit=None):
 
 
 def scan_bookmarks(bookmarks_dir):
-    """扫描所有批次 prepared JSON，返回: records(list), vid_ids(set), ext_urls(set)."""
+    """扫描所有批次 prepared JSON，返回: records(list), vid_ids(set), ext_urls(set).
+
+    视频信号两类：
+    - media 类型 + `/video/` URL → 确定是 X 视频（老批次 4-18~6-30）
+    - tweet 类型链接 → 候选（2026-07-01 起管线把视频链接标成 tweet，须 bird 验证）
+    """
     records = []
     vid_ids = set()
     ext_urls = set()
@@ -81,6 +86,15 @@ def scan_bookmarks(bookmarks_dir):
                     rec["url"] = url
                     records.append(rec)
                     ext_urls.add(url)
+                elif ltype == "tweet" and url:
+                    # 7-01 起管线把视频链接标成 tweet——作为候选交给 bird 验证
+                    m = re.search(r"/status/(\d+)", url)
+                    if m:
+                        rec["kind"] = "tweet_candidate"
+                        rec["vid_id"] = m.group(1)
+                        rec["url"] = url
+                        records.append(rec)
+                        vid_ids.add(m.group(1))
     return records, vid_ids, ext_urls
 
 
@@ -101,13 +115,36 @@ def fetch_duration(bird, tid, timeout=40):
         return None
 
 
-def batch_fetch(bird, vid_ids, sleep=0.8):
-    """批量取时长，返回 {tid: durationMs}。"""
+def batch_fetch(bird, vid_ids, sleep=0.8, max_retries=2, fail_slowdown=3.0):
+    """批量取时长，带限流感知重试。
+
+    X 对连续批量 GraphQL 查询有限流：287 条连续查时后半段会全挂（返回空）。
+    策略：单条失败重试 max_retries 次；连续失败 fail_threshold 条后降速。
+    返回 {tid: durationMs}。
+    """
     results = {}
-    for i, tid in enumerate(sorted(vid_ids)):
-        results[tid] = fetch_duration(bird, tid)
+    fail_streak = 0
+    ids = sorted(vid_ids)
+    for i, tid in enumerate(ids):
+        dur = None
+        for attempt in range(max_retries + 1):
+            dur = fetch_duration(bird, tid)
+            if dur is not None:
+                break
+            if attempt < max_retries:
+                time.sleep(sleep * (attempt + 1))
+        results[tid] = dur
+        if dur is None:
+            fail_streak += 1
+        else:
+            fail_streak = 0
+        # 连续 15 条失败 → 判定限流，降速 3 倍
+        if fail_streak >= 15:
+            print(f"  [限流] 连续 {fail_streak} 条失败，降速至 {sleep * fail_slowdown:.1f}s/条", file=sys.stderr, flush=True)
+            time.sleep(sleep * fail_slowdown * 10)
+            fail_streak = 0
         if (i + 1) % 10 == 0:
-            print(f"  progress {i+1}/{len(vid_ids)}", file=sys.stderr, flush=True)
+            print(f"  progress {i+1}/{len(ids)}", file=sys.stderr, flush=True)
         time.sleep(sleep)
     return results
 
@@ -150,7 +187,7 @@ def main():
     # 4. 汇总（按视频推文 id 去重）
     vid_map = {}
     for rec in records:
-        if rec["kind"] != "x_video":
+        if rec["kind"] not in ("x_video", "tweet_candidate"):
             continue
         tid = rec["vid_id"]
         v = vid_map.setdefault(tid, {"durationMs": durations.get(tid), "refs": []})

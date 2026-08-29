@@ -23,6 +23,19 @@ prepared JSON 的 `media` 字段**恒为空**——时长信息在 JSON 里根�
 必须三选一兜底：`link.get('url') or link.get('expanded') or link.get('original')`。
 `type=media` 的链接里也有大量 `/photo/1`（图片），只有 `/video/` 才是视频。
 
+**⚠️ 2026-07-01 起管线分类变化（重要）**：4-18~6-30 的视频链接标 `type=media` + `/video/1`；
+7-01 之后**同类链接改标 `type=tweet`**（`media` 类型基本消失）。因此扫描时
+**`tweet` 类型链接必须也纳入候选**，交给 bird 验证是否带视频——否则 7 月后的视频全部漏掉
+（2026-08-28 全量实测：7-01 以来 183 条 tweet 链接中 33 条带视频、32 条 ≤10min）。
+
+**根因（2026-08-28 已查实）**：不是 smaug 代码变了，是 **X 平台侧 t.co 短链重定向行为在
+7-01 前后变化**。smaug 的 `expandTcoLink()`（processor.js 第 426 行）用 HTTP HEAD 跟随
+重定向取最终 URL，分类逻辑（第 716-720 行）看 URL 是否含 `/video/`：
+- 7-01 前：视频短链 HEAD 展开 → `https://x.com/.../status/xxx/video/1`（带 /video/）→ 标 `media`
+- 7-01 后：同一短链 HEAD 展开 → `https://x.com/.../status/xxx`（不带 /video/）→ 标 `tweet`
+本地 smaug-tool（`/root/.hermes/hermes-agent/smaug-tool/`）代码与 config 自 8-13 部署以来未变。
+修复方向：smaug 分类逻辑改为「tweet 链接也尝试 fetchTweet 取 media」，或查找时含 tweet 候选（本 skill 已实现）。
+
 ## 推荐执行方式（最快）
 
 ```bash
@@ -68,11 +81,16 @@ bird read <tweet_id> --json
 # 返回 {"media":[{"type":"video","durationMs":49792,...}]}
 ```
 
-批量脚本要点（62 条约 90 秒跑完）：
-- `subprocess.run(['bird','read',tid,'--json'], capture_output=True, text=True, timeout=40)`
+批量脚本要点（287 条约 6 分钟跑完）：
+- `subprocess.run([bird,'read',tid,'--json'], capture_output=True, text=True, timeout=40)`
 - 每条之间 `time.sleep(0.8)` 防限流
+- **X 批量限流（2026-08-28 实测）**：287 条连续查询时后半段全挂（返回空）——
+  必须带重试（单条 2 次）+ 连续 15 条失败判定限流自动降速 3 倍
 - 解析 `json.loads(out)` → `media[0].durationMs`（毫秒）
 - 失败处理：`empty` 输出 = 推文已删（记录为「已删/无法读取」，不要反复重试）
+- **环境坑**：bird 需要 X 登录 cookie（TWITTER_AUTH_TOKEN/CT0 环境变量或浏览器 profile）。
+  execute_code 工具环境**没有**这些变量（terminal 有）——批量查询必须在 terminal 环境跑，
+  否则全部返回「No Twitter cookies found」→ 结果全 none（不是推文删了！）
 
 ### 3. 过滤短视频
 
@@ -112,4 +130,6 @@ bird read <tweet_id> --json
 
 ## 历史结果参考
 
-- 2026-08-28 首次执行：116 条视频记录 → 62 唯一视频 → 55 短视频 + 6 长 + 1 已删 + 20 外部链接
+- 2026-08-28 首次执行（仅 media 扫描）：116 条视频记录 → 62 唯一视频 → 55 短视频 + 6 长 + 1 已删 + 20 外部链接
+- 2026-08-28 诊断发现（管线分类变化）：7-01 起视频链接改标 `type=tweet`，老扫描漏掉 7 月后全部视频。
+  全量验证 183 条 tweet 链接 → 33 条带视频（32 条 ≤10min）。合并后完整结果：**87 短视频 + 7 长视频**

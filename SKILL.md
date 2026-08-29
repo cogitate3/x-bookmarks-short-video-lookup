@@ -38,12 +38,13 @@ python3 <skill_dir>/scripts/lookup_x_bookmark_videos.py --minutes 10
 
 ## Hard rules
 
-1. prepared JSON `media` 字段恒空——视频信号只在 `links[]` 里：`/video/` URL = X 视频，`type=video` = 外部视频
-2. link URL 字段名三选一兜底：`url`/`expanded`/`original`
-3. `type=media` 混有图片——只有 `/video/` 才是视频
-4. 同视频被多天批次重复收藏（5-19~5-22 连抓）→ 按视频推文 id 去重
-5. `xurl` 未注册 app 会 401——直接走 bird；bird 读已删推文返回空 → 标「已删」，不重试
-6. YouTube 反爬（yt-dlp/innertube/curl 都拦）→ 用 oEmbed 拿标题 + web_extract 抓章节判断时长
+1. prepared JSON `media` 字段恒空——视频信号在 `links[]` 里：`/video/` URL = X 视频，`type=video` = 外部视频
+2. **7-01 起摄入管线把视频链接标成 `type=tweet`（不再标 media）**——tweet 类型链接也必须纳入 bird 验证，否则 7 月后全漏（2026-08-28 实测：183 条 tweet 链接中 33 条是视频、32 条 ≤10min）
+3. link URL 字段名三选一兜底：`url`/`expanded`/`original`
+4. `type=media` 混有图片——只有 `/video/` 才是视频
+5. 同视频被多天批次重复收藏（5-19~5-22 连抓）→ 按视频推文 id 去重
+6. `xurl` 未注册 app 会 401——直接走 bird；bird 读已删推文返回空 → 标「已删」，不重试
+7. YouTube 反爬（yt-dlp/innertube/curl 都拦）→ 用 oEmbed 拿标题 + web_extract 抓章节判断时长
 
 ## Out of scope / do not use
 
