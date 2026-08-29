@@ -1,0 +1,14 @@
+{
+  "positive_concepts": {
+    "bookmarks": {"phrases": ["收藏", "bookmark", "bookmarks", "收藏夹", "bookmarks 里", "收藏的", "收藏里有"], "weight": 3},
+    "short_video": {"phrases": ["短视频", "短视频推文", "带视频", "带视频的", "视频推文", "视频", "10分钟以内", "十分钟以内"], "weight": 3},
+    "x_twitter": {"phrases": ["X", "推特", "twitter", "推文"], "weight": 2},
+    "lookup": {"phrases": ["找", "找出", "哪些", "筛选", "筛出", "查", "看看", "都是多少", "时长"], "weight": 2}
+  },
+  "negative_concepts": {
+    "search_web": {"phrases": ["搜X上", "搜 X", "全网", "采集", "素材", "采样", "时事帖", "方向"], "weight": 4, "exclusive": true},
+    "ingest": {"phrases": ["保存到知识库", "摄入", "收录", "存档"], "weight": 2, "exclusive": true},
+    "writing": {"phrases": ["写口播稿", "写文章", "改写", "总结一下"], "weight": 2, "exclusive": true},
+    "long_video": {"phrases": ["长视频"], "weight": 2, "exclusive": true}
+  }
+}

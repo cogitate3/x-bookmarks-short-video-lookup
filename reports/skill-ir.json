@@ -1,0 +1,81 @@
+{
+  "schema_version": "2.0.0",
+  "name": "x-bookmarks-short-video-lookup",
+  "title": "X 收藏短视频查找",
+  "job_to_be_done": "找收藏的 X 推文中的短视频（≤10分钟）时使用，bird 取时长输出清单。",
+  "trigger_surface": {
+    "description": "找收藏的 X 推文中的短视频（≤10分钟）时使用，bird 取时长输出清单。",
+    "should_trigger": [
+      "找收藏的 X 里的短视频",
+      "哪些收藏推文带视频",
+      "bookmarks 里的视频",
+      "帮我看看收藏的推文里有哪些是短视频，10分钟以内的",
+      "找知识库里每日 X bookmarks 带短视频的推文",
+      "收藏夹里的 X 视频推文时长都是多少",
+      "从收藏的推文中筛出带视频的"
+    ],
+    "should_not_trigger": [
+      "把这篇推文保存到知识库",
+      "总结一下今天收藏的文章",
+      "搜 X 上关于川普的最新视频",
+      "采集 X 短视频时事帖做素材",
+      "帮我写一篇口播稿"
+    ],
+    "edge_cases": [
+      "看看收藏里有视频没",
+      "找收藏里的长视频",
+      "X 收藏的视频推文"
+    ]
+  },
+  "workflow": {
+    "steps": [
+      "Understand the request.",
+      "Execute the main task.",
+      "Validate the result."
+    ],
+    "decision_points": [],
+    "failure_modes": []
+  },
+  "resources": {
+    "references": [
+      "references/core-workflow.md",
+      "references/porting.md"
+    ],
+    "scripts": [
+      "scripts/lookup_x_bookmark_videos.py"
+    ],
+    "assets": [],
+    "reports": []
+  },
+  "eval_plan": {
+    "trigger": [
+      "evals/semantic_config.json",
+      "evals/trigger_cases.json"
+    ],
+    "output": [],
+    "adversarial": [],
+    "baseline": "without_skill"
+  },
+  "risk": {
+    "output_risk": "low",
+    "execution_risk": "medium",
+    "trust_boundary": "external"
+  },
+  "governance": {
+    "owner": "hermes-agent",
+    "maturity": "governed",
+    "review_cadence": "quarterly",
+    "review_due": "2026-11-28"
+  },
+  "targets": [
+    "claude",
+    "generic",
+    "openai",
+    "agent-skills-compatible"
+  ],
+  "source_files": [
+    "SKILL.md",
+    "manifest.json",
+    "agents/interface.yaml"
+  ]
+}

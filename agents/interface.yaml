@@ -1,0 +1,11 @@
+interface:
+  display_name: "X 收藏短视频查找"
+  short_description: "扫描知识库每日 X bookmarks，用 bird 取视频时长，输出 ≤10 分钟短视频清单"
+  default_prompt: "Use x-bookmarks-short-video-lookup to find short videos (≤10 min) in bookmarked X tweets. Run scripts/lookup_x_bookmark_videos.py --minutes 10, then read references/core-workflow.md for manual steps and pitfalls."
+compatibility:
+  canonical_format: "agent-skills"
+  adapter_targets: ["claude", "generic", "openai"]
+  activation: {mode: "manual", paths: []}
+  execution: {context: "inline", shell: "bash"}
+  trust: {source_tier: "remote", remote_inline_execution: "forbid", remote_metadata_policy: "allow-metadata-only"}
+  degradation: {claude: "neutral-source", generic: "neutral-source", openai: "metadata-adapter"}

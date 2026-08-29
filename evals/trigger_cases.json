@@ -1,0 +1,24 @@
+{
+  "recommended_threshold": 0.3,
+  "should_trigger": [
+    {"text": "找收藏的 X 里的短视频", "family": "short-video-lookup"},
+    {"text": "哪些收藏推文带视频", "family": "short-video-lookup"},
+    {"text": "bookmarks 里的视频", "family": "short-video-lookup"},
+    {"text": "帮我看看收藏的推文里有哪些是短视频，10分钟以内的", "family": "short-video-lookup"},
+    {"text": "找知识库里每日 X bookmarks 带短视频的推文", "family": "short-video-lookup"},
+    {"text": "收藏夹里的 X 视频推文时长都是多少", "family": "short-video-lookup"},
+    {"text": "从收藏的推文中筛出带视频的", "family": "short-video-lookup"},
+    {"text": "看看收藏里有视频没", "family": "short-video-lookup"},
+    {"text": "X 收藏的视频推文", "family": "short-video-lookup"}
+  ],
+  "should_not_trigger": [
+    {"text": "把这篇推文保存到知识库", "family": "ingest"},
+    {"text": "总结一下今天收藏的文章", "family": "summary"},
+    {"text": "搜 X 上关于川普的最新视频", "family": "x-video-collect"},
+    {"text": "采集 X 短视频时事帖做素材", "family": "x-video-collect"},
+    {"text": "帮我写一篇口播稿", "family": "writing"}
+  ],
+  "near_neighbor": [
+    {"text": "找收藏里的长视频", "family": "short-video-lookup"}
+  ]
+}
