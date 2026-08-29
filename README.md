@@ -50,11 +50,12 @@ python3 ~/.hermes/skills/social-media/x-bookmarks-short-video-lookup/scripts/loo
 
 ### 工作原理
 
-1. 扫描所有 `*-smaug-bookmarks-batch-prepared.json`，在 `bookmarks[].links[]` 里找 `/video/` 链接（X 原生视频）和 `type=video` 链接（外部视频）
-2. 用 `bird read <id> --json` 逐条取 `media[].durationMs`（真实时长）
+1. 扫描所有 `*-smaug-bookmarks-batch-prepared.json`，在 `bookmarks[].links[]` 里找 `/video/` 链接（X 原生视频）、`type=video` 链接（外部视频），**以及 `type=tweet` 链接（2026-07-01 起 X 平台改了 t.co 重定向，视频链接被 smaug 标成 tweet，必须补偿验证）**
+2. 用 `bird read <id> --json` 逐条取 `media[].durationMs`（真实时长），内置 X 批量限流防护（重试 + 自动降速）
 3. 按阈值过滤 + 按视频推文 id 去重，输出报告
 
 > 为什么不用官方 API？prepared JSON 的 `media` 字段恒为空，时长必须逐条调接口。`xurl`（官方 API）未注册 app 会 401，`bird`（X 内部 GraphQL 接口）是本方案实测唯一可靠取时长的途径。
+> **注意**：bird 需要 X 登录 cookie 环境变量（`TWITTER_AUTH_TOKEN`/`TWITTER_CT0`），必须在有这些变量的 shell 环境运行。
 
 ### Troubleshooting
 

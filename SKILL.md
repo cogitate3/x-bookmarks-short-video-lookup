@@ -1,7 +1,7 @@
 ---
 name: x-bookmarks-short-video-lookup
 description: 找收藏的 X 推文中的短视频（≤10分钟）时使用，bird 取时长输出清单。
-version: 1.1.0
+version: 1.2.0
 author: Hermes Agent
 license: MIT
 metadata:

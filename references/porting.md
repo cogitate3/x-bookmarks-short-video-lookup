@@ -57,6 +57,17 @@ python3 ~/.hermes/skills/social-media/x-bookmarks-short-video-lookup/scripts/loo
 # 若 bird 未认证：脚本报错提示 → 回到第 3 步
 ```
 
+## 6. 环境坑（2026-08-28 实测）
+
+- **bird 必须在有 X cookie 环境变量的 shell 里跑**：`TWITTER_AUTH_TOKEN` + `TWITTER_CT0`。
+  Hermes 的 execute_code 工具环境**没有**这两个变量（terminal 有）——在 execute_code 里跑
+  批量查询会全部返回「No Twitter cookies found」→ 结果全 none（看起来像推文被删，其实是认证缺失）。
+  排查时先验证：`python3 -c "import os; print(bool(os.environ.get('TWITTER_AUTH_TOKEN')))"`。
+- **X 批量限流**：287 条连续查询时后半段全挂（返回空）。脚本已内置重试（单条 2 次）+
+  连续 15 条失败判定限流自动降速。若仍有大量 none，可 `--minutes` 分批或增大 sleep。
+- **分类变化根因**：7-01 起 X 平台改了 t.co 短链重定向（不再暴露 /video/ 路径），
+  smaug 摄入把所有视频链接标成 tweet。本 skill 的扫描已补偿（tweet 链接也纳入候选）。
+
 ## 已知依赖版本
 
 - bird v0.8.0（2026-08 实测），命令：`bird read <id> --json`
